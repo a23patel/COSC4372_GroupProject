@@ -49,6 +49,7 @@ classdef GUI < matlab.apps.AppBase
         MRIACQUISITIONSIMULATORLabel   matlab.ui.control.Label
     end
 
+    
     % To draw a filled circle on a 2D canvas
     methods (Access = private)
         
@@ -81,14 +82,15 @@ classdef GUI < matlab.apps.AppBase
             updatedCanvas = canvas;
         end
     end
+
     
 
     % Callbacks that handle component events
     methods (Access = private)
 
         % Button pushed function: GeneratePhantomButton
-        function GeneratePhantomButtonPushed(app, ~)
-            size = [300,300];
+        function GeneratePhantomButtonPushed(app, event)
+            size = [256,256];
             canvas = zeros(size);
 
             cp = [size(1)/2 , size(2)/2];
@@ -184,31 +186,35 @@ classdef GUI < matlab.apps.AppBase
         end
 
         % Button pushed function: DisplayKSpaceButton
-        function DisplayKSpaceButtonPushed(app, ~)
-            % Read the phantom image from the file
-            phantomImage = imread('./test.png');
+        function DisplayKSpaceButtonPushed(app, event)
+            % reference: https://www.mathworks.com/help/images/fourier-transform.html
             
-            % Convert the image to grayscale
-            grayscaleImage = im2gray(phantomImage);
-        
-            % Perform Fourier transform with zero-padding to create a 1280x1280 matrix
-            fourierTransform = fft2(grayscaleImage, 1280, 1280);
-        
-            % Shift the k-space to the center
-            shiftedKSpace = fftshift(fourierTransform);
-            
-            % Compute the magnitude of the shifted Fourier transform
-            magnitudeKSpace = abs(shiftedKSpace);
-        
-            % Log-transform the magnitude for better visualization
-            logMagnitudeKSpace = log(magnitudeKSpace);
-        
-            % Display the log-transformed Fourier transform in the app's KSpaceImage UIAxes component
-            imshow(logMagnitudeKSpace, [], 'parent', app.KSpaceImage);
+            % read the phantom
+            imdata = imread('./test.png');
+            %figure(1);imshow(imdata); title('Original Image');
+
+            % grey scale
+            imdata = im2gray(imdata);
+            %figure(2);imshow(imdata); title('Grey Scale');
+
+            % get the fourier transform with zero padding of 1k by 1k
+            fourier_t = fft2(imdata, 1280, 1280);
+
+            % shift the k-space
+            fourier_shift = fftshift(fourier_t);
+            s = abs(fourier_shift);
+            %figure(3);imshow(s, []); title('Fourier Transform');
+
+            % log transform
+            s2 = log(s);
+            %figure(4);imshow(s2, []); title('Log Transform FT');
+           
+            % show image in panel
+            imshow(s2, [], 'parent', app.KSpaceImage);
         end
 
         % Button pushed function: RunAcquisitionButton
-        function RunAcquisitionButtonPushed(app, ~)
+        function RunAcquisitionButtonPushed(app, event)
             a = app.oflinesEditField.Value;
             b = app.ofpointsperlineEditField.Value;
             [x,y] = meshgrid(-a:b,-a:b);
@@ -219,8 +225,8 @@ classdef GUI < matlab.apps.AppBase
             m = max(cf1(:));
             %Generate Sampled K-Space for Radial
             imshow(im2uint8(cf1/m), [], 'parent', app.SampledKSpaceImage);
-            %o_img = imread('./test.png');
-            %idiff = 0;
+            o_img = imread('./test.png');
+            idiff = 0;
             
             %Reconstructed image using Radial Sampling
             if(app.RadialButton.Value == 1)
@@ -232,15 +238,15 @@ classdef GUI < matlab.apps.AppBase
                         theta1 = 0:10:180;
                     end
                     [R1,~] = radon(img,theta1); 
-                    %num_angles_R1 = size(R1,2)
-                    %N_R1 = size(R1,1)
+                    num_angles_R1 = size(R1,2)
+                    N_R1 = size(R1,1)
                     P_512 = img;
-                    [~,~] = radon(P_512,theta1);
-                    %N_512 = size(R_512,1)
+                    [R_512,xp_512] = radon(P_512,theta1);
+                    N_512 = size(R_512,1)
                     output_size = max(size(img));
                     dtheta1 = theta1(2) - theta1(1);
                     I1 = iradon(R1,dtheta1,output_size);
-                    %idiff = I1;
+                    idiff = I1;
                     %%Generate Sampled K-Space for Radial
                     imshow(I1, [], 'parent', app.ReconstructedImage);
 
@@ -251,15 +257,15 @@ classdef GUI < matlab.apps.AppBase
                         theta2 = 0:4.9:180;
                     end
                     [R2,~] = radon(img,theta2);
-                    %num_angles_R2 = size(R2,2)
-                    %N_R2 = size(R2,1)
+                    num_angles_R2 = size(R2,2)
+                    N_R2 = size(R2,1)
                     P_512 = img;
-                    [~,~] = radon(P_512,theta2);
-                    %N_512 = size(R_512,1)
+                    [R_512,xp_512] = radon(P_512,theta2);
+                    N_512 = size(R_512,1)
                     output_size = max(size(img));
                     dtheta1 = theta2(2) - theta2(1);
                     I2 = iradon(R2,dtheta1,output_size);
-                    %idiff = I2;
+                    idiff = I2;
                     %%Generate K-Space for Radial image
                     imshow(I2, [], 'parent', app.ReconstructedImage);
                 else
@@ -268,16 +274,16 @@ classdef GUI < matlab.apps.AppBase
                     else
                         theta3 = 0:2.5:178;
                     end
-                    [R3,~] = radon(img,theta3); 
-                    %num_angles = size(R3,2)
-                    %N_R = size(R3,1)
+                    [R3,xp] = radon(img,theta3); 
+                    num_angles = size(R3,2)
+                    N_R = size(R3,1)
                     P_512 = img;
-                    [~,~] = radon(P_512,theta3);
-                    %N_512 = size(R_512,1)
+                    [R_512,xp_512] = radon(P_512,theta3);
+                    N_512 = size(R_512,1)
                     output_size = max(size(img));
                     dtheta = theta3(2) - theta3(1);
                     I3 = iradon(R3,dtheta,output_size);
-                    %idiff = I3;
+                    idiff = I3;
                     %%Generate Sampled K-Space for Radial image
                     imshow(I3, [], 'parent', app.ReconstructedImage);
                 end
@@ -346,7 +352,7 @@ classdef GUI < matlab.apps.AppBase
 
                 %figure(2);imshow(abs(scaled), []); title('Scaled Image');
                 %figure(4);imshow(abs(reconstruction), []); title('Reconstructed Image');
-                %idiff = stretchedImage;
+                idiff = stretchedImage;
                 %Generate Reconstructed image for Cartesian
                 imshow(stretchedImage, [], 'parent', app.ReconstructedImage);
             end
@@ -357,12 +363,12 @@ classdef GUI < matlab.apps.AppBase
             numLine = app.oflinesEditField.Value;
             pointsPerLine = app.ofpointsperlineEditField.Value;
             
-            app.outputNumLinesEditField.Value = numLine;
-            app.outputPointsPerLineEditField.Value = pointsPerLine;
+            app.outputNumLinesEditField.Value = numLine
+            app.outputPointsPerLineEditField.Value = pointsPerLine
         end
 
         % Selection changed function: PhantomButtonGroup
-        function PhantomButtonGroupSelectionChanged(app, ~)
+        function PhantomButtonGroupSelectionChanged(app, event)
             switch app.PhantomButtonGroup.SelectedObject.Text
                 case 'Phantom1Button'
                     val = 1;
@@ -914,7 +920,7 @@ classdef GUI < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = simpleGUI
+        function app = GUI
 
             % Create UIFigure and components
             createComponents(app)

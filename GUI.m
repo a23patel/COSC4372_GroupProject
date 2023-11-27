@@ -109,8 +109,35 @@ classdef GUI < matlab.apps.AppBase
             % Specifies the distance between each pair of inner circles
             innerCircleDistance = ceil(backgroundCircleRadius/5.4);
             
+            % Phantom1
+            if(app.Phantom1Button.Value == 1)
+                width = app.WidthSlider.Value;
+                length = app.LengthSlider.Value;
+                
+                if(width < 1)
+                    width = 50;
+                end
+
+                if(length < 1)
+                    length = 50;
+                end
+
+                square_size = floor([width*1.5 length*1.5]);
+        
+                % Fixed height (fixed y with different x)
+                x_start = floor(centerPoint(2) - square_size(2)/2);
+                % height x-axis ending point
+                x_end = floor(centerPoint(2) + square_size(2)/2);
+                
+                % Fixed width (fixed x with different y)
+                y_start = floor(centerPoint(1) - square_size(1)/2);
+                y_end = floor(centerPoint(1) + square_size(1)/2);
+        
+                % Draw the square to the canvas
+                canvas(x_start : x_end, y_start : y_end) = 256;
+
             % Phantom2 (with 5 inner circle)
-            if(app.Phantom1Button.Value == 0)
+            else 
                 % make an array of inner circles
                 innerCircle = [];
 
@@ -138,54 +165,11 @@ classdef GUI < matlab.apps.AppBase
                     % Draw the inner circle on the canvas with a specified color
                     canvas = draw(app, canvas, innerCircle(i).center, innerCircle(i).radius, 250);
                 end
-            
-            % Phantom1
-            else 
-                width = app.WidthSlider.Value;
-                length = app.LengthSlider.Value;
-                
-                if(width<1)
-                    width = 30; 
-                end
-
-                if(length < 1)
-                    length = 30;
-                end
-
-                if(width > 47)
-                    width = 47;
-                end
-
-                if(length > 47)
-                    length = 47;
-                end
-
-                r_size = floor([width*3 length*3]);
-
-                % get user input - rectangular size 
-                % r_para[width, height]
-                r_para = r_size;
-        
-                % x-axis = height
-                % height x-axis starting point
-                x1 = floor(centerPoint(2) - r_para(2)/2);
-                % height x-axis ending point
-                x2 = x1 + r_para(2);
-                
-                % y-axis = width
-                % width y-axix starting point
-                y1 = floor(centerPoint(1) - r_para(1)/2);
-                % width y-axix ending point
-                y2 = y1 + r_para(1);
-        
-                % draw the square
-                canvas(x1 : x2, y1 : y2) = 256;
             end
+            
 
-            imwrite(canvas,'./test.png');
-
-
-            a = imread('./test.png');
+            imwrite(canvas,'./phantom.png');
+            a = imread('./phantom.png');
             imshow(a,'parent', app.PhantomImage);
             
         end
@@ -194,27 +178,28 @@ classdef GUI < matlab.apps.AppBase
         function DisplayKSpaceButtonPushed(app, event)
             % reference: https://www.mathworks.com/help/images/fourier-transform.html
             
-            % read the phantom
-            imdata = imread('./test.png');
-            %figure(1);imshow(imdata); title('Original Image');
+            % reading the phantom
+            imdata = imread('./phantom.png');
 
-            % grey scale
+            % Converting the RGB image to grayscale
             imdata = im2gray(imdata);
-            %figure(2);imshow(imdata); title('Grey Scale');
 
-            % get the fourier transform with zero padding of 1k by 1k
-            fourier_t = fft2(imdata, 1280, 1280);
+            % get the fourier transform with zero padding of size 1024 by
+            % 1024
+            fourier_t = fft2(imdata, 1024, 1024);
 
-            % shift the k-space
+            % shift the zero-frequency component of the Fourier transform to the center of the matrix
             fourier_shift = fftshift(fourier_t);
-            s = abs(fourier_shift);
-            %figure(3);imshow(s, []); title('Fourier Transform');
 
-            % log transform
+            % Calculating the magnitude of the shifted Fourier transform
+            s = abs(fourier_shift);
+
+            % Performing log transform on the magnitude of fourier
+            % transform
             s2 = log(s);
-            %figure(4);imshow(s2, []); title('Log Transform FT');
            
-            % show image in panel
+            % Displaying the final k-spaced image in the image panel within
+            % the app
             imshow(s2, [], 'parent', app.KSpaceImage);
         end
 
@@ -230,12 +215,12 @@ classdef GUI < matlab.apps.AppBase
             m = max(cf1(:));
             %Generate Sampled K-Space for Radial
             imshow(im2uint8(cf1/m), [], 'parent', app.SampledKSpaceImage);
-            o_img = imread('./test.png');
+            o_img = imread('./phantom.png');
             idiff = 0;
             
             %Reconstructed image using Radial Sampling
             if(app.RadialButton.Value == 1)
-                img = imread('./test.png');
+                img = imread('./phantom.png');
                 if(a >= 16) && (a < 64)
                     if(b >= 16) && (b < 64)
                         theta1 = 0:10:170;
@@ -321,7 +306,7 @@ classdef GUI < matlab.apps.AppBase
                  %disp(end_range_y);
 
                  % read the phantom
-                imdata = imread('./test.png');
+                imdata = imread('./phantom.png');
                 %figure(1);imshow(imdata); title('Original Image');
 
                 % grey scale
@@ -408,12 +393,12 @@ classdef GUI < matlab.apps.AppBase
             m = max(cf1(:));
             %Generate Sampled K-Space for Radial
             imshow(im2uint8(cf1/m), [], 'parent', app.SampledKSpaceImage);
-            o_img = imread('./test.png');
+            o_img = imread('./phantom.png');
             idiff = 0;
             
             %Reconstructed image using Radial Sampling
             if(app.RadialButton.Value == 1)
-                img = imread('./test.png');
+                img = imread('./phantom.png');
                 if(a >= 16) && (a < 64)
                     if(b >= 16) && (b < 64)
                         theta1 = 0:10:170;
@@ -499,7 +484,7 @@ classdef GUI < matlab.apps.AppBase
                  %disp(end_range_y);
 
                  % read the phantom
-                imdata = imread('./test.png');
+                imdata = imread('./phantom.png');
                 %figure(1);imshow(imdata); title('Original Image');
 
                 % grey scale
@@ -634,7 +619,7 @@ classdef GUI < matlab.apps.AppBase
 
             % Create WidthSlider
             app.WidthSlider = uislider(app.RectangularstructuresizePanel);
-            app.WidthSlider.Limits = [0 50];
+            app.WidthSlider.Limits = [0 100];
             app.WidthSlider.MajorTicks = [0 10 20 30 40 50 60 70 80];
             app.WidthSlider.FontName = 'Verdana';
             app.WidthSlider.FontColor = [1 1 1];
@@ -650,7 +635,7 @@ classdef GUI < matlab.apps.AppBase
 
             % Create LengthSlider
             app.LengthSlider = uislider(app.RectangularstructuresizePanel);
-            app.LengthSlider.Limits = [0 50];
+            app.LengthSlider.Limits = [0 100];
             app.LengthSlider.MajorTicks = [0 10 20 30 40 50 60 70 80];
             app.LengthSlider.FontName = 'Verdana';
             app.LengthSlider.FontColor = [1 1 1];

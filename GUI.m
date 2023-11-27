@@ -89,98 +89,87 @@ classdef GUI < matlab.apps.AppBase
     methods (Access = private)
 
         % Button pushed function: GeneratePhantomButton
-        function GeneratePhantomButtonPushed(app, event)
-            size = [256,256];
-            canvas = zeros(size);
+        function GeneratePhantomButtonPushed(app, ~)
+            % Set the canvas size and initialize it with zeros
+            canvasSize = [300, 300];
+            canvas = zeros(canvasSize);
 
-            cp = [size(1)/2 , size(2)/2];
-            bg_circle_r = ceil(0.4 * size(1));
-            canvas = draw(app, canvas, cp, bg_circle_r, 150);
+            % Calculate the center of the canvas
+            centerPoint = [canvasSize(1)/2, canvasSize(2)/2];
+            % Set radius of the background circle as 40% of the canvas's width
+            backgroundCircleRadius = ceil(0.4 * canvasSize(1));
+
+            % Draw the background circle on the canvas with a specified color
+            canvas = draw(app, canvas, centerPoint, backgroundCircleRadius, 150);
             
-            %Change the color to grey 
+            % Converts the canvas to an 8-bit unsigned integer format
+            % (a common step in image processing)
             canvas = uint8(canvas);
-
-            %[y,x] = find(canvas);
-            %plot(app.PhantomImage, x,y);
             
-            % specify distance between each pair of inner circles 
-            distance = ceil(bg_circle_r/5.4);
+            % Specifies the distance between each pair of inner circles
+            innerCircleDistance = ceil(backgroundCircleRadius/5.4);
             
-            if(app.Phantom1Button.Value == 0)
-                % make an array of inner circles
-                innerCircle = [];
-                
-                % inner circle 1
-                innerCircle(1).center = [cp(1), (cp(2)- floor(4.5 * distance))];
-                innerCircle(1).radius = ceil( min(size)/55);
-                canvas = draw(app, canvas, innerCircle(1).center, innerCircle(1).radius, 250);
-                
-                % inner circle 2
-                innerCircle(2).center = [cp(1), (cp(2)- 3 * distance)];
-                innerCircle(2).radius = floor(1.52 * innerCircle(1).radius);
-                canvas = draw(app, canvas, innerCircle(2).center, innerCircle(2).radius, 250);
-                
-                % inner circle 3
-                innerCircle(3).center = [cp(1), (cp(2)- 1 * distance)];
-                innerCircle(3).radius = floor(1.52 * innerCircle(2).radius);
-                canvas = draw(app, canvas, innerCircle(3).center, innerCircle(3).radius, 250);
-                
-                % inner circle 4
-                innerCircle(4).center = [cp(1), (cp(2)) + distance];
-                innerCircle(4).radius = floor(1.52 * innerCircle(3).radius);
-                canvas = draw(app, canvas, innerCircle(4).center, innerCircle(4).radius, 232);
-                
-                % inner circle 5
-                innerCircle(5).center = [cp(1), (cp(2) + floor(3.5 * distance))];
-                innerCircle(5).radius = floor(1.52 * innerCircle(4).radius);
-                canvas = draw(app, canvas, innerCircle(5).center, innerCircle(5).radius, 232);
-       
-            else 
+            % Phantom1
+            if(app.Phantom1Button.Value == 1)
                 width = app.WidthSlider.Value;
                 length = app.LengthSlider.Value;
                 
-                if(width<1)
-                    width = 30; 
+                if(width < 1)
+                    width = 50;
                 end
 
                 if(length < 1)
-                    length = 30;
+                    length = 50;
                 end
 
-                if(width > 47)
-                    width = 47;
-                end
-
-                if(length > 47)
-                    length = 47;
-                end
-
-                r_size = floor([width*3 length*3]);
-
-                % get user input - rectangular size 
-                % r_para[width, height]
-                r_para = r_size;
+                square_size = floor([width*1.5 length*1.5]);
         
-                % x-axis = height
-                % height x-axis starting point
-                x1 = floor(cp(2) - r_para(2)/2);
+                % Fixed height (fixed y with different x)
+                x_start = floor(centerPoint(2) - square_size(2)/2);
                 % height x-axis ending point
-                x2 = x1 + r_para(2);
+                x_end = floor(centerPoint(2) + square_size(2)/2);
                 
-                % y-axis = width
-                % width y-axix starting point
-                y1 = floor(cp(1) - r_para(1)/2);
-                % width y-axix ending point
-                y2 = y1 + r_para(1);
+                % Fixed width (fixed x with different y)
+                y_start = floor(centerPoint(1) - square_size(1)/2);
+                y_end = floor(centerPoint(1) + square_size(1)/2);
         
-                % draw the square
-                canvas(x1 : x2, y1 : y2) = 256;
+                % Draw the square to the canvas
+                canvas(x_start : x_end, y_start : y_end) = 256;
+
+            % Phantom2 (with 5 inner circle)
+            else 
+                % make an array of inner circles
+                innerCircle = [];
+
+                % inner circle 1
+                innerCircle(1).center = [centerPoint(1), (centerPoint(2)- floor(4.5 * innerCircleDistance))];
+                innerCircle(1).radius = ceil( min(canvasSize)/55);
+                
+                % inner circle 2
+                innerCircle(2).center = [centerPoint(1), (centerPoint(2)- 3 * innerCircleDistance)];
+                innerCircle(2).radius = floor(1.52 * innerCircle(1).radius);
+                
+                % inner circle 3
+                innerCircle(3).center = [centerPoint(1), (centerPoint(2)- 1 * innerCircleDistance)];
+                innerCircle(3).radius = floor(1.52 * innerCircle(2).radius);
+                
+                % inner circle 4
+                innerCircle(4).center = [centerPoint(1), (centerPoint(2)) + innerCircleDistance];
+                innerCircle(4).radius = floor(1.52 * innerCircle(3).radius);
+                
+                % inner circle 5
+                innerCircle(5).center = [centerPoint(1), (centerPoint(2) + floor(3.5 * innerCircleDistance))];
+                innerCircle(5).radius = floor(1.52 * innerCircle(4).radius);
+                
+                for i = 1:5
+                    % Draw the inner circle on the canvas with a specified color
+                    canvas = draw(app, canvas, innerCircle(i).center, innerCircle(i).radius, 250);
+                end
             end
+            
 
-            imwrite(canvas,'./test.png');
-
-
-            a = imread('./test.png');
+            imwrite(canvas,'./phantom.png');
+            a = imread('./phantom.png');
             imshow(a,'parent', app.PhantomImage);
             
         end
@@ -190,7 +179,7 @@ classdef GUI < matlab.apps.AppBase
             % reference: https://www.mathworks.com/help/images/fourier-transform.html
             
             % reading the phantom
-            imdata = imread('./test.png');
+            imdata = imread('./phantom.png');
 
             % Converting the RGB image to grayscale
             imdata = im2gray(imdata);
@@ -226,12 +215,12 @@ classdef GUI < matlab.apps.AppBase
             m = max(cf1(:));
             %Generate Sampled K-Space for Radial
             imshow(im2uint8(cf1/m), [], 'parent', app.SampledKSpaceImage);
-            o_img = imread('./test.png');
+            o_img = imread('./phantom.png');
             idiff = 0;
             
             %Reconstructed image using Radial Sampling
             if(app.RadialButton.Value == 1)
-                img = imread('./test.png');
+                img = imread('./phantom.png');
                 if(a >= 16) && (a < 64)
                     if(b >= 16) && (b < 64)
                         theta1 = 0:10:170;
@@ -317,7 +306,7 @@ classdef GUI < matlab.apps.AppBase
                  %disp(end_range_y);
 
                  % read the phantom
-                imdata = imread('./test.png');
+                imdata = imread('./phantom.png');
                 %figure(1);imshow(imdata); title('Original Image');
 
                 % grey scale
@@ -404,12 +393,12 @@ classdef GUI < matlab.apps.AppBase
             m = max(cf1(:));
             %Generate Sampled K-Space for Radial
             imshow(im2uint8(cf1/m), [], 'parent', app.SampledKSpaceImage);
-            o_img = imread('./test.png');
+            o_img = imread('./phantom.png');
             idiff = 0;
             
             %Reconstructed image using Radial Sampling
             if(app.RadialButton.Value == 1)
-                img = imread('./test.png');
+                img = imread('./phantom.png');
                 if(a >= 16) && (a < 64)
                     if(b >= 16) && (b < 64)
                         theta1 = 0:10:170;
@@ -495,7 +484,7 @@ classdef GUI < matlab.apps.AppBase
                  %disp(end_range_y);
 
                  % read the phantom
-                imdata = imread('./test.png');
+                imdata = imread('./phantom.png');
                 %figure(1);imshow(imdata); title('Original Image');
 
                 % grey scale
@@ -630,7 +619,7 @@ classdef GUI < matlab.apps.AppBase
 
             % Create WidthSlider
             app.WidthSlider = uislider(app.RectangularstructuresizePanel);
-            app.WidthSlider.Limits = [0 50];
+            app.WidthSlider.Limits = [0 100];
             app.WidthSlider.MajorTicks = [0 10 20 30 40 50 60 70 80];
             app.WidthSlider.FontName = 'Verdana';
             app.WidthSlider.FontColor = [1 1 1];
@@ -646,7 +635,7 @@ classdef GUI < matlab.apps.AppBase
 
             % Create LengthSlider
             app.LengthSlider = uislider(app.RectangularstructuresizePanel);
-            app.LengthSlider.Limits = [0 50];
+            app.LengthSlider.Limits = [0 100];
             app.LengthSlider.MajorTicks = [0 10 20 30 40 50 60 70 80];
             app.LengthSlider.FontName = 'Verdana';
             app.LengthSlider.FontColor = [1 1 1];

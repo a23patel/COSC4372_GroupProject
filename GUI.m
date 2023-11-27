@@ -189,27 +189,28 @@ classdef GUI < matlab.apps.AppBase
         function DisplayKSpaceButtonPushed(app, event)
             % reference: https://www.mathworks.com/help/images/fourier-transform.html
             
-            % read the phantom
+            % reading the phantom
             imdata = imread('./test.png');
-            %figure(1);imshow(imdata); title('Original Image');
 
-            % grey scale
+            % Converting the RGB image to grayscale
             imdata = im2gray(imdata);
-            %figure(2);imshow(imdata); title('Grey Scale');
 
-            % get the fourier transform with zero padding of 1k by 1k
-            fourier_t = fft2(imdata, 1280, 1280);
+            % get the fourier transform with zero padding of size 1024 by
+            % 1024
+            fourier_t = fft2(imdata, 1024, 1024);
 
-            % shift the k-space
+            % shift the zero-frequency component of the Fourier transform to the center of the matrix
             fourier_shift = fftshift(fourier_t);
-            s = abs(fourier_shift);
-            %figure(3);imshow(s, []); title('Fourier Transform');
 
-            % log transform
+            % Calculating the magnitude of the shifted Fourier transform
+            s = abs(fourier_shift);
+
+            % Performing log transform on the magnitude of fourier
+            % transform
             s2 = log(s);
-            %figure(4);imshow(s2, []); title('Log Transform FT');
            
-            % show image in panel
+            % Displaying the final k-spaced image in the image panel within
+            % the app
             imshow(s2, [], 'parent', app.KSpaceImage);
         end
 

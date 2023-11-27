@@ -89,52 +89,57 @@ classdef GUI < matlab.apps.AppBase
     methods (Access = private)
 
         % Button pushed function: GeneratePhantomButton
-        function GeneratePhantomButtonPushed(app, event)
-            size = [256,256];
-            canvas = zeros(size);
+        function GeneratePhantomButtonPushed(app, ~)
+            % Set the canvas size and initialize it with zeros
+            canvasSize = [300, 300];
+            canvas = zeros(canvasSize);
 
-            cp = [size(1)/2 , size(2)/2];
-            bg_circle_r = ceil(0.4 * size(1));
-            canvas = draw(app, canvas, cp, bg_circle_r, 150);
+            % Calculate the center of the canvas
+            centerPoint = [canvasSize(1)/2, canvasSize(2)/2];
+            % Set radius of the background circle as 40% of the canvas's width
+            backgroundCircleRadius = ceil(0.4 * canvasSize(1));
+
+            % Draw the background circle on the canvas with a specified color
+            canvas = draw(app, canvas, centerPoint, backgroundCircleRadius, 150);
             
-            %Change the color to grey 
+            % Converts the canvas to an 8-bit unsigned integer format
+            % (a common step in image processing)
             canvas = uint8(canvas);
-
-            %[y,x] = find(canvas);
-            %plot(app.PhantomImage, x,y);
             
-            % specify distance between each pair of inner circles 
-            distance = ceil(bg_circle_r/5.4);
+            % Specifies the distance between each pair of inner circles
+            innerCircleDistance = ceil(backgroundCircleRadius/5.4);
             
+            % Phantom2 (with 5 inner circle)
             if(app.Phantom1Button.Value == 0)
                 % make an array of inner circles
                 innerCircle = [];
-                
+
                 % inner circle 1
-                innerCircle(1).center = [cp(1), (cp(2)- floor(4.5 * distance))];
-                innerCircle(1).radius = ceil( min(size)/55);
-                canvas = draw(app, canvas, innerCircle(1).center, innerCircle(1).radius, 250);
+                innerCircle(1).center = [centerPoint(1), (centerPoint(2)- floor(4.5 * innerCircleDistance))];
+                innerCircle(1).radius = ceil( min(canvasSize)/55);
                 
                 % inner circle 2
-                innerCircle(2).center = [cp(1), (cp(2)- 3 * distance)];
+                innerCircle(2).center = [centerPoint(1), (centerPoint(2)- 3 * innerCircleDistance)];
                 innerCircle(2).radius = floor(1.52 * innerCircle(1).radius);
-                canvas = draw(app, canvas, innerCircle(2).center, innerCircle(2).radius, 250);
                 
                 % inner circle 3
-                innerCircle(3).center = [cp(1), (cp(2)- 1 * distance)];
+                innerCircle(3).center = [centerPoint(1), (centerPoint(2)- 1 * innerCircleDistance)];
                 innerCircle(3).radius = floor(1.52 * innerCircle(2).radius);
-                canvas = draw(app, canvas, innerCircle(3).center, innerCircle(3).radius, 250);
                 
                 % inner circle 4
-                innerCircle(4).center = [cp(1), (cp(2)) + distance];
+                innerCircle(4).center = [centerPoint(1), (centerPoint(2)) + innerCircleDistance];
                 innerCircle(4).radius = floor(1.52 * innerCircle(3).radius);
-                canvas = draw(app, canvas, innerCircle(4).center, innerCircle(4).radius, 232);
                 
                 % inner circle 5
-                innerCircle(5).center = [cp(1), (cp(2) + floor(3.5 * distance))];
+                innerCircle(5).center = [centerPoint(1), (centerPoint(2) + floor(3.5 * innerCircleDistance))];
                 innerCircle(5).radius = floor(1.52 * innerCircle(4).radius);
-                canvas = draw(app, canvas, innerCircle(5).center, innerCircle(5).radius, 232);
-       
+                
+                for i = 1:5
+                    % Draw the inner circle on the canvas with a specified color
+                    canvas = draw(app, canvas, innerCircle(i).center, innerCircle(i).radius, 250);
+                end
+            
+            % Phantom1
             else 
                 width = app.WidthSlider.Value;
                 length = app.LengthSlider.Value;
@@ -163,13 +168,13 @@ classdef GUI < matlab.apps.AppBase
         
                 % x-axis = height
                 % height x-axis starting point
-                x1 = floor(cp(2) - r_para(2)/2);
+                x1 = floor(centerPoint(2) - r_para(2)/2);
                 % height x-axis ending point
                 x2 = x1 + r_para(2);
                 
                 % y-axis = width
                 % width y-axix starting point
-                y1 = floor(cp(1) - r_para(1)/2);
+                y1 = floor(centerPoint(1) - r_para(1)/2);
                 % width y-axix ending point
                 y2 = y1 + r_para(1);
         

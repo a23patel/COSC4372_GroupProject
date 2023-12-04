@@ -123,7 +123,7 @@ function RunAcquisitionButtonPushed(app, ~)
         imData = im2gray(imData);
 
         % Fourier transform with zero padding
-        fourierTransform = fft2(imData, 1024, 1024);
+        fourierTransform = fft2(imData, 1280, 1280);
         shiftedKSpace = fftshift(fourierTransform);
 
         % Cropping the k-space

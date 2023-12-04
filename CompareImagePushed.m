@@ -1,54 +1,50 @@
-% Button pushed function: RunAcquisitionButton
-function RunAcquisitionButtonPushed(app, ~)
-    % Get values from Edit Fields
-    numberOfLines = app.oflinesEditField.Value;
-    pointsPerLine = app.ofpointsperlineEditField.Value;
+% Button pushed function: CompareImageButton
+function CompareImagePushed(app, ~)
+    % Parameters for creating the sampling pattern
+    numberOfLines = app.NumberOfLines.Value;
+    pointsPerLine = app.PointsPerLine.Value;
 
-    % Generate Cartesian grid
+    % Generating sampling pattern
     [x, y] = meshgrid(-numberOfLines:pointsPerLine, -numberOfLines:pointsPerLine);
+    z = sqrt(x.^2 + y.^2);
+    c = (z < 15);
 
-    % Calculate radial distance from the center
-    radialDistance = sqrt(x.^2 + y.^2);
+    % Fourier transform and visualization of the sampled K-space image
+    cf = fftshift(fft2(c));
+    cf1 = log(1 + abs(cf));
+    maxIntensity = max(cf1(:));
+    imshow(im2uint8(cf1 / maxIntensity), [], 'parent', app.SampledKSpaceImage);
 
-    % Creating a circular mask with radius 15
-    circularMask = (radialDistance < 15);
-
-    % Performing Fourier Transform
-    fftResult = fftshift(fft2(circularMask));
-
-    % Computing the log magnitude spectrum
-    logMagnitudeSpectrum = log(1 + abs(fftResult));
-
-    % Visualize Sampled K-Space for Radial
-    imshow(im2uint8(logMagnitudeSpectrum / max(logMagnitudeSpectrum(:))), [], 'parent', app.SampledKSpaceImage);
-
-    % Read the phantom image
+    % Reading the phantom image
     phantomImage = imread('./phantom.png');
 
     % Reconstructed image using Radial Sampling
     if(app.RadialButton.Value == 1)
-        if (numberOfLines >= 16) && (numberOfLines < 64)
-            if(pointsPerLine >= 16) && (pointsPerLine < 64)
+        if(numberOfLines >= 16) && (numberOfLines < 64)
+            if pointsPerLine >= 16 && pointsPerLine < 64
                 theta1 = 0:10:170;
             else
                 theta1 = 0:10:180;
             end
             % Perform Radon transform
             [R1, ~] = radon(phantomImage, theta1);
-            % size(R1, 2); returns number of columns in matrix R1
-            % size(R1, 1); returns number of rows in matrix R2
-
+            %size(R1, 2); returns the number of columns in matrix R1
+            %size(R1, 1); returns the number of rows in matrix R1
+    
             % Interpolate to 512 angles
             P512 = phantomImage;
             [~, ~] = radon(P512, theta1);
-            %size(R512, 1); returns the number of rows in matrix R512
+            %size(R512, 1);  returns the size of rows in matrix R512
             outputSize = max(size(phantomImage));
             dTheta1 = theta1(2) - theta1(1);
+    
+            % Perform Inverse Radon transform
             I1 = iradon(R1, dTheta1, outputSize);
+            differenceImage = I1;
+    
+            % Display the reconstructed image for radial sampling
+            imshow(differenceImage, [], 'parent', app.ReconstructedImage);
 
-            % Display the reconstructed image for Radial sampling
-            idiff = I1;
-            imshow(idiff, [], 'parent', app.ReconstructedImage);
         elseif (numberOfLines >= 64) && (numberOfLines <= 128)
             if (pointsPerLine >= 64) && (pointsPerLine <= 128)
                 theta2 = 0:5:175;
@@ -67,11 +63,12 @@ function RunAcquisitionButtonPushed(app, ~)
             % size(R512, 1); returns number of rows in matrix R512
             outputSize = max(size(phantomImage));
             dTheta2 = theta2(2) - theta2(1);
+            % Perform inverse Radon transform
             I2 = iradon(R2, dTheta2, outputSize);
-            idiff = I2;
+            differenceImage = I2;
         
             % Display the reconstructed image of radial sampling
-            imshow(idiff, [], 'parent', app.ReconstructedImage);
+            imshow(differenceImage, [], 'parent', app.ReconstructedImage);
         else
             if(numberOfLines > 128) && (pointsPerLine > 128)
                 theta3 = 0:2:178;
@@ -91,35 +88,32 @@ function RunAcquisitionButtonPushed(app, ~)
             outputSize = max(size(phantomImage));
             dTheta3 = theta3(2) - theta3(1);
             I3 = iradon(R3, dTheta3, outputSize);
-            idiff = I3;
+            differenceImage = I3;
 
             % Display the reconstructed image of radial sampling
-            imshow(idiff, [], 'parent', app.ReconstructedImage);
+            imshow(differenceImage, [], 'parent', app.ReconstructedImage);
         end
     else
         % Reconstructed image using Cartesian sampling
-        numLines = app.oflinesEditField.Value;
-        numPoints = app.ofpointsperlineEditField.Value;
-      
+        numberOfLines = app.NumberOfLines.Value;
+        pointsPerLine = app.PointsPerLine.Value;
+
         % Defining ranges for cropping
-        startX = int64(640 - (numLines * 2.5));
-        startY = int64(640 - (numPoints * 2.5));
+        startX = int64(640 - (numberOfLines * 2.5));
+        startY = int64(640 - (pointsPerLine * 2.5));
         if startX == 0
             startX = 1;
         end
         if startY == 0
             startY = 1;
         end
-        endX = int64(640 + (numLines * 2.5));
-        endY = int64(640 + (numPoints * 2.5));
+        endX = int64(640 + (numberOfLines * 2.5));
+        endY = int64(640 + (pointsPerLine * 2.5));
 
-        %disp(startX);
-        %disp(startY);
-        %disp(endX);
-        %disp(endY);
-        
         % Reading the phantom image
         imData = imread('./phantom.png');
+
+        % Convert image to grayscale
         imData = im2gray(imData);
 
         % Fourier transform with zero padding
@@ -133,28 +127,23 @@ function RunAcquisitionButtonPushed(app, ~)
         reconstruction = ifft2(croppedKSpace);
 
         % Cropping the reconstruction to specified size
-        croppedReconstruction = reconstruction(1:numLines, 1:numPoints);
+        croppedReconstruction = reconstruction(1:numberOfLines, 1:pointsPerLine);
 
         % Scaling and resizing the image
         absScaled = abs(croppedReconstruction);
         stretchedImage = imresize(absScaled, [256, 256]);
 
-        % Generating Sampled K-Space image for Cartesian sampling
-        targetSize = [numLines * 5, numPoints * 5];
+        % Displaying Sampled K-Space for Cartesian
+        targetSize = [numberOfLines * 5, pointsPerLine * 5];
         win1 = centerCropWindow2d(size(shiftedKSpace), targetSize);
         B1 = imcrop(abs(log(shiftedKSpace)), win1);
         B1 = imresize(B1, [256, 256]);
         imshow(B1, [], 'parent', app.SampledKSpaceImage);
-        idiff = stretchedImage;
-        % Display the reconstructed image for Cartesian
-        imshow(idiff, [], 'parent', app.ReconstructedImage);
+        differenceImage = stretchedImage;
+        % Display the reconstructed image for Cartesian sampling
+        imshow(differenceImage, [], 'parent', app.ReconstructedImage);
     end
-
-    % Updating reconstruction image panel
-    app.PhantomtypeTextArea.Value = app.PhantomButtonGroup.SelectedObject.Text;
-    app.MethodTextArea.Value = app.SamplingButtonGroup.SelectedObject.Text;
-    numLines = app.oflinesEditField.Value;
-    numPointsPerLine = app.ofpointsperlineEditField.Value;
-    app.outputNumLinesEditField.Value = numLines;
-    app.outputPointsPerLineEditField.Value = numPointsPerLine;
+    % Display the difference image and input phantom image for comparison
+    imshowpair(phantomImage, differenceImage, 'montage');
+    title('Compare Input Phantom with Reconstructed Phantom', 'Color', 'blue');
 end

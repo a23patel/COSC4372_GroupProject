@@ -1,5 +1,5 @@
 % Button pushed function: GeneratePhantomButton
-function GeneratePhantomButtonPushed(app, ~)
+function GeneratePhantomPushed(app, ~)
     % Setting the canvas size and initialize it with zeros
     canvasSize = [300, 300];
     canvas = zeros(canvasSize);

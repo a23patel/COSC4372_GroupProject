@@ -146,4 +146,11 @@ function CompareImagePushed(app, ~)
     % Display the difference image and input phantom image for comparison
     imshowpair(phantomImage, differenceImage, 'montage');
     title('Compare Input Phantom with Reconstructed Phantom', 'Color', 'blue');
+    % Getting the current figure handle
+    figHandle = gcf;
+    % Converting the frame to an image
+    frameImage = frame2im(getframe(figHandle));
+    % Saving the images using imwrite
+    imwrite(frameImage, '.\comparisonImage.png');
+
 end

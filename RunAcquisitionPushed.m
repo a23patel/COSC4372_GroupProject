@@ -46,9 +46,16 @@ function RunAcquisitionPushed(app, ~)
             dTheta1 = theta1(2) - theta1(1);
             I1 = iradon(R1, dTheta1, outputSize);
 
+            % Saving the K-space image of radial sampling using imwrite
+            frameImage = getframe(app.SampledKSpaceImage);
+            imwrite(frameImage.cdata, './kspaceRadial.png');
+
             % Display the reconstructed image for Radial sampling
             idiff = I1;
             imshow(idiff, [], 'parent', app.ReconstructedImage);
+            % Saving the image using imwrite
+            frameImage = getframe(app.ReconstructedImage);
+            imwrite(frameImage.cdata, './reconstructedRadial.png');
         elseif (numberOfLines >= 64) && (numberOfLines <= 128)
             if (pointsPerLine >= 64) && (pointsPerLine <= 128)
                 theta2 = 0:5:175;
@@ -69,9 +76,17 @@ function RunAcquisitionPushed(app, ~)
             dTheta2 = theta2(2) - theta2(1);
             I2 = iradon(R2, dTheta2, outputSize);
             idiff = I2;
-        
+
+            % Saving the K-space image of radial sampling using imwrite
+            frameImage = getframe(app.SampledKSpaceImage);
+            imwrite(frameImage.cdata, './kspaceRadial.png');
+
             % Display the reconstructed image of radial sampling
             imshow(idiff, [], 'parent', app.ReconstructedImage);
+            % Saving the image using imwrite
+            frameImage = getframe(app.ReconstructedImage);
+            imwrite(frameImage.cdata, './reconstructedRadial.png');
+
         else
             if(numberOfLines > 128) && (pointsPerLine > 128)
                 theta3 = 0:2:178;
@@ -93,8 +108,15 @@ function RunAcquisitionPushed(app, ~)
             I3 = iradon(R3, dTheta3, outputSize);
             idiff = I3;
 
+            % Saving the K-space image of radial sampling using imwrite
+            frameImage = getframe(app.SampledKSpaceImage);
+            imwrite(frameImage.cdata, './kspaceRadial.png');
+
             % Display the reconstructed image of radial sampling
             imshow(idiff, [], 'parent', app.ReconstructedImage);
+            % Saving the image using imwrite
+            frameImage = getframe(app.ReconstructedImage);
+            imwrite(frameImage.cdata, './reconstructedRadial.png');
         end
     else
         % Reconstructed image using Cartesian sampling
@@ -145,9 +167,15 @@ function RunAcquisitionPushed(app, ~)
         B1 = imcrop(abs(log(shiftedKSpace)), win1);
         B1 = imresize(B1, [256, 256]);
         imshow(B1, [], 'parent', app.SampledKSpaceImage);
+        % Saving the image using imwrite
+        frameImage = getframe(app.SampledKSpaceImage);
+        imwrite(frameImage.cdata, './kspaceCartesian.png');
         idiff = stretchedImage;
-        % Display the reconstructed image for Cartesian
+        % Display the reconstructed image for Cartesian sampling
         imshow(idiff, [], 'parent', app.ReconstructedImage);
+        % Saving the image using imwrite
+        frameImage = getframe(app.ReconstructedImage);
+        imwrite(frameImage.cdata, './reconstructedCartesian.png');
     end
 
     % Updating reconstruction image panel

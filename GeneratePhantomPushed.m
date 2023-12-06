@@ -78,9 +78,10 @@ function GeneratePhantomPushed(app, ~)
         end
     end
     
-
+    % saving the phantom image to a png file
     imwrite(canvas,'./phantom.png');
     a = imread('./phantom.png');
+    % displaying the input phantom image
     imshow(a,'parent', app.PhantomImage);
     
 end

@@ -21,4 +21,8 @@ function DisplayKSpacePushed(app, ~)
    
     % Displaying the final k-spaced image in the image panel within the app
     imshow(si2, [], 'parent', app.KSpaceImage);
+
+    % Saving the image using imwrite
+    frameImage = getframe(app.KSpaceImage);
+    imwrite(frameImage.cdata, './kspace.png');
 end
